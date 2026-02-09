@@ -2,10 +2,10 @@ import { Controller, Get } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 
 
-@Controller()
+@Controller("api/auth")
 export class AuthController {
     constructor(private authService: AuthService) {}
-    @Get()
+    @Get("login")
     public login(): string {
         return this.authService.login();
     }
