@@ -1,4 +1,4 @@
-import { Controller, Delete, Get, Post, Put } from "@nestjs/common";
+import { Controller, Delete, Get, Param, Post, Put } from "@nestjs/common";
 import { TaskService } from "./task.service";
 
 
@@ -6,7 +6,7 @@ import { TaskService } from "./task.service";
 @Controller("api/task")
 export class TaskController {
     constructor(private taskService: TaskService) {}
-    @Get("list")
+    @Get()
     public list(): string {
         return this.taskService.task();
     }
@@ -17,19 +17,19 @@ export class TaskController {
     }
 
    
-    @Delete("delete")
+    @Delete("delete/:id")
     public delete(id:number): string {
         return this.taskService.delete(id);
     }
 
     @Put("update")
-    public update(id:number, task: any): string {
-        return this.taskService.update(id, task);
+    public update(@Param("id") id:number): string {
+        return this.taskService.update(id, "datos de la tarea");
     }   
           
     @Get(":id")
-    public findById(id:number): string {
-        return this.taskService.findById(id);
+    public findById(@Param("id") id:String): string {
+        return this.taskService.findById(Number(id));
     }
 
     
