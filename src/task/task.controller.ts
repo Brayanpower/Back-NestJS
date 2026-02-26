@@ -1,14 +1,17 @@
 import { Body, Controller, Delete, Get, Param, Post, Put } from "@nestjs/common";
 import { TaskService } from "./task.service";
 import { CreateTaskDto } from "./dto/CreateTaskDto";
+import { promises } from "dns";
+import { Task } from "./entities/task.entity";
 
 
 @Controller("api/task")
 export class TaskController {
     constructor(private taskService: TaskService) {}
+
     @Get()
-    public list(): string {
-        return this.taskService.task();
+    public async list(): Promise<Task[]> {
+        return await this.taskService.task();
     }
 
     @Post("create")
