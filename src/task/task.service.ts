@@ -1,5 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { Task } from "./entities/task.entity";
+import { CreateTaskDto } from "./dto/CreateTaskDto";
+import { updateTaskDto } from "./dto/updateTaskDto";
 
 @Injectable()
 export class TaskService {
@@ -7,6 +9,7 @@ export class TaskService {
         @Inject('MYSQL_CONNECTION') private readonly mysqlConnection: any,
         @Inject('PG_CONNECTION') private readonly pgConnection: any,
     ) { }
+
     public async task(): Promise<Task[]> {
 
         const query = 'SELECT * FROM task ORDER BY name ASC';
@@ -20,17 +23,31 @@ export class TaskService {
         return rows as Task[];
     }
 
-    public create(task: any): string {
-        return task;
+    public async create(task: CreateTaskDto): Promise<string> {
+        const query = 'INSERT INTO task (name, description, priority, user_id) VALUES (?, ?, ?, ?)';
+        const [result] = await this.mysqlConnection.query(query, [task.name, task.description, task.priority,task.userId]);
+        return 'Created task: ' + task.name;
     }
 
-    public update(id: number, task: any): string {
-        return `tarea actualizada con id: ${id} y datos: ${task}`;
+    public async update(id: number, task: updateTaskDto): Promise<string> {
+        const query = 'UPDATE task SET name = ?, description = ?, priority = ? WHERE id = ?';
+        const result = await this.mysqlConnection.query(query, [task.name, task.description, task.priority, id]);
+        return 'Updated task complete';
     }
-    public delete(id: number): string {
-        return `tarea eliminada con id: ${id}`;
+
+
+    public async delete(id: number): Promise<Boolean> {
+        const query = 'DELETE FROM task WHERE id = ?';
+        const [result] = await this.mysqlConnection.query(query, [id]);
+        return result.affectedRows > 0;
     }
-    public findById(id: number): string {
-        return `tarea encontrada por id: ${id}`;
+
+
+    public async findById(id: number): Promise<Task> {
+        const query = 'SELECT * FROM task WHERE id = ?';
+        console.log(query);
+        const [rows] = await this.mysqlConnection.query(query, [id]);
+
+        return rows[0] as Task;
     }
 } 

@@ -1,6 +1,8 @@
 import { IsBoolean, IsNotEmpty, IsNumber, IsString, Max, MaxLength, Min, MinLength } from "class-validator";
 
 export class CreateTaskDto {
+
+
   @IsString()
   @IsNotEmpty()
   @MinLength(3)
