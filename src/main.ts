@@ -1,20 +1,35 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common/pipes/validation.pipe';
+import { ValidationPipe } from '@nestjs/common'; // Simplificado el import
 import * as dotenv from 'dotenv';
-import { SwaggerModule } from '@nestjs/swagger/dist/swagger-module';
-import { DocumentBuilder } from '@nestjs/swagger/dist/document-builder';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'; // Simplificado el import
 dotenv.config();
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // 1. HABILITAR CORS (Vital para que Swagger no de "Failed to fetch")
+  app.enableCors();
+
+
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
-  }));  
-  const config = new DocumentBuilder().setTitle('API Con vunerabilidades de seguridad').setDescription('Documento de API').setVersion('1.0.0').build();
+  }));
+    
+  const config = new DocumentBuilder()
+    .setTitle('API Con vulnerabilidades de seguridad') // Corregido typo
+    .setDescription('Documento de API')
+    .setVersion('1.0.0')
+    .addTag('tasks') // Opcional: para organizar tus rutas
+    .build();
+
   const document = SwaggerModule.createDocument(app, config);
+  
+  // 3. CAMBIAR RUTA DE DOCS (Opcional, pero común dejarlo en /docs o api/docs)
   SwaggerModule.setup('api/docs', app, document); 
+
   await app.listen(process.env.PORT ?? 3000);
+  console.log(`Application is running on: ${await app.getUrl()}`);
 }
 bootstrap();
 

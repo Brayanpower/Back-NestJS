@@ -4,7 +4,7 @@ import { Task, Prisma } from 'src/generated/prisma/client';
 
 @Injectable()
 export class TasksService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async getTask(
     taskWhereUniqueInput: Prisma.TaskWhereUniqueInput,

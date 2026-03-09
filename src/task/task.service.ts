@@ -6,8 +6,7 @@ import { updateTaskDto } from "./dto/updateTaskDto";
 @Injectable()
 export class TaskService {
     constructor(
-        @Inject('MYSQL_CONNECTION') private readonly mysqlConnection: any,
-        @Inject('PG_CONNECTION') private readonly pgConnection: any,
+        @Inject('MYSQL_CONNECTION') private readonly mysqlConnection: any
     ) { }
 
     public async task(): Promise<Task[]> {

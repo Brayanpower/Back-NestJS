@@ -1,14 +1,12 @@
+// src/task/task.module.ts
 import { Module } from "@nestjs/common";
-import { TaskController } from "./task.controller";
-import { TaskService } from "./task.service";
-import { mysqlProvider } from "src/common/providers/mysql.provider";
-import { pgProvider } from "src/common/providers/pg.provider";
+import { TasksService } from "src/common/services/task.service";
+import { AppController } from "src/common/controllers/app.controller";
+import { UsersService } from "src/common/services/user.service";
 
 @Module({
   imports: [],
-  controllers: [TaskController],
-  providers: [TaskService,mysqlProvider ,pgProvider] 
+  controllers: [AppController],
+  providers: [TasksService, UsersService] // <--- Agrégalo aquí
 })
-export class TaskModule {
-    
-}
+export class TaskModule {}

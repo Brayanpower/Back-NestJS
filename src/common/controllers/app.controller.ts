@@ -14,7 +14,7 @@ import { TasksService } from '../services/task.service';
 import { UsersService } from '../services/user.service';
 import { NotFoundError } from 'rxjs';
 
-@Controller("api/prisma")
+@Controller("api")
 export class AppController {
     constructor(
         private readonly userService: UsersService,
@@ -28,7 +28,7 @@ export class AppController {
     }
 
     // Listar todas las tareas
-    @Get('tasks')
+    @Get('tasks') // El prefijo va solo en el método
     async getTasks(): Promise<TaskModel[]> {
         return this.taskService.getTasks({});
     }
@@ -60,12 +60,12 @@ export class AppController {
     // Eliminar una tarea
     @Delete('task/:id')
     async deleteTask(@Param('id') id: string): Promise<boolean> {
-    try {
-        await this.taskService.deleteTask({ id: Number(id) });
-        return true
-    } catch (error) {
-        throw new NotFoundError("Failed to delete task with id " + id);
-    }
+        try {
+            await this.taskService.deleteTask({ id: Number(id) });
+            return true
+        } catch (error) {
+            throw new NotFoundError("Failed to delete task with id " + id);
+        }
     }
 
     // Crear un usuario
