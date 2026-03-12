@@ -1,35 +1,41 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { UsersService } from '../common/services/user.service';
+import { Injectable, UnauthorizedException, NotFoundException } from '@nestjs/common';
 import { UtilService } from '../common/services/util/util.service';
 import { LoginDto } from './dbo/login.dbo';
+import { UsersService } from 'src/common/services/user.service';
+
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
     private readonly utilService: UtilService,
   ) {}
 
-  async login(loginDto: LoginDto) {
-    const user = await this.usersService.findByUsername(loginDto.username);
-    if (!user) {
-      throw new UnauthorizedException('Usuario no encontrado');
-    }
+// src/auth/auth.service.ts
 
-    const isPasswordValid = await this.utilService.comparePasswords(
-      loginDto.password,
-      user.password,
-    );
+async login(loginDto: any) {
+  const { username, password } = loginDto;
 
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Credenciales inválidas');
-    }
+  // 1. Buscar el usuario
+  // Asegúrate de que findOneByUsername esté implementado en UsersService
+  const user = await this.usersService.findOneByUsername(username);
 
-    const payload = { username: user.username, sub: user.id };
-    return {
-      access_token: this.jwtService.sign(payload),
-    };
+  // 2. VALIDACIÓN CRÍTICA: Si no existe, lanzamos el error 404 y el código se detiene aquí.
+  if (!user) {
+    throw new NotFoundException('Usuario inexistente.');
   }
+
+  // 3. Comparar contraseñas
+  // Solo llegamos aquí si 'user' tiene datos.
+  const isMatch = await this.utilService.comparePasswords(password, user.password);
+
+  if (!isMatch) {
+    throw new UnauthorizedException('Contraseña incorrecta.');
+  }
+
+  return {
+    message: 'Login exitoso',
+    user: { id: user.id, username: user.username }
+  };
+}
 }
