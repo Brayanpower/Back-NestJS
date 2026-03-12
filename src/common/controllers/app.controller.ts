@@ -81,4 +81,10 @@ export class AppController {
             password: userData.password,
         });
     }
+
+    @Get('users')
+    async getUsers(): Promise<UserModel[]> {
+        return this.userService.users({});
+    }
+    
 }

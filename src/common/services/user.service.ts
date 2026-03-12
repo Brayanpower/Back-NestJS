@@ -2,11 +2,13 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, User } from 'src/generated/prisma/client';
 import { PrismaService } from './prisma.service';
+import { UtilService } from './util/util.service';
 
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private readonly utilService: UtilService,
+  ) { }
 
   async user(
     userWhereUniqueInput: Prisma.UserWhereUniqueInput,
@@ -32,12 +34,19 @@ export class UsersService {
       orderBy,
     });
   }
-
+  
   async createUser(data: Prisma.UserCreateInput): Promise<User> {
+    // Encriptar la contraseña antes de guardar
+    const hashedPassword = await this.utilService.hashPassword(data.password);
+
     return this.prisma.user.create({
-      data,
+      data: {
+        ...data,
+        password: hashedPassword, // Guardamos la contraseña encriptada
+      },
     });
   }
+
 
   async updateUser(params: {
     where: Prisma.UserWhereUniqueInput;
@@ -55,4 +64,10 @@ export class UsersService {
       where,
     });
   }
+
+ async findByUsername(username: string): Promise<User | null> {
+    return this.prisma.user.findUnique({ where: { username } });
+  }
+
+
 }
