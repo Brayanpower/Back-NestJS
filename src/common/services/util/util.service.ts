@@ -8,7 +8,9 @@ export class UtilService {
         return await bcrypt.hash(password, saltRounds);
     }
     // En util.service.ts
-    async comparePasswords(password: string, hash: string): Promise<boolean> {
-        return await bcrypt.compare(password, hash);
-    }
+   async comparePasswords(password: string, hash: string): Promise<boolean> {
+  // Si falta alguno, retornamos false en lugar de dejar que bcrypt explote
+  if (!password || !hash) return false; 
+  return await bcrypt.compare(password, hash);
+}
 }

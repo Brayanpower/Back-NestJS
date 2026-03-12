@@ -47,11 +47,16 @@ export class UsersService {
     });
   }
   
-  async findOneByUsername(username: string): Promise<User | null> {
-  return this.prisma.user.findUnique({
-    where: { 
-      username: username 
-    },
+async findOneByUsername(username: string) {
+  return await this.prisma.user.findUnique({
+    where: { username },
+  });
+}
+
+async updateRefreshToken(userId: number, refreshToken: string | null) {
+  return await this.prisma.user.update({
+    where: { id: userId },
+    data: { refreshToken },
   });
 }
 

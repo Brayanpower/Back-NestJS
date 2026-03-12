@@ -19,6 +19,7 @@ model User {
   username  String   @db.VarChar(255) @unique
   email     String   @db.VarChar(255) @unique
   password  String   @db.VarChar(255)
+  refreshToken String?  @db.Text
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

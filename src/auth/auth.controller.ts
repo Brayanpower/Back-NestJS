@@ -13,19 +13,21 @@ export class AuthController {
     return this.authSvc.login(loginDto);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Get('me')
-  getProfile(@Request() req) {
-    return req.user;
-  }
+@UseGuards(JwtAuthGuard)
+@Get('me')
+getProfile(@Request() req) {
+  // Ahora req.user existe gracias a la JwtStrategy
+  return req.user;
+}
 
-  // @Post('refresh')
-  // async refreshToken(@Request() req) {
-  //   return this.authSvc.refreshToken(req.user);
-  // }
+@Post('refresh')
+async refresh(@Body('refreshToken') token: string) {
+  return this.authSvc.refresh(token);
+}
 
-  @Post('logout')
-  async logout() {
-    return { message: 'User logged out' };
-  }
+@UseGuards(JwtAuthGuard) // Necesitamos saber quién es para borrar su token
+@Post('logout')
+async logout(@Request() req) {
+  return this.authSvc.logout(req.user.userId);
+}
 }

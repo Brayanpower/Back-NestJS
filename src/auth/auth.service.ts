@@ -1,41 +1,80 @@
 import { Injectable, UnauthorizedException, NotFoundException } from '@nestjs/common';
-import { UtilService } from '../common/services/util/util.service';
-import { LoginDto } from './dbo/login.dbo';
-import { UsersService } from 'src/common/services/user.service';
+import { JwtService } from '@nestjs/jwt';
 
+import { UtilService } from '../common/services/util/util.service';
+import { UsersService } from 'src/common/services/user.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly utilService: UtilService,
-  ) {}
+    private readonly jwtService: JwtService,
+  ) { }
 
-// src/auth/auth.service.ts
+  async login(loginDto: any) {
+    const { username, password } = loginDto;
 
-async login(loginDto: any) {
-  const { username, password } = loginDto;
+    // 1. Buscar usuario
+    const user = await this.usersService.findOneByUsername(username);
+    if (!user) {
+      throw new NotFoundException('El usuario no existe.');
+    }
 
-  // 1. Buscar el usuario
-  // Asegúrate de que findOneByUsername esté implementado en UsersService
-  const user = await this.usersService.findOneByUsername(username);
+    // 2. Comparar (Asegúrate de que password sea "Linux" y user.password el hash)
+    const isMatch = await this.utilService.comparePasswords(password, user.password);
+    if (!isMatch) {
+      throw new UnauthorizedException('Contraseña incorrecta.');
+    }
 
-  // 2. VALIDACIÓN CRÍTICA: Si no existe, lanzamos el error 404 y el código se detiene aquí.
-  if (!user) {
-    throw new NotFoundException('Usuario inexistente.');
+    // 3. Generar Payload
+    const payload = { sub: user.id, username: user.username };
+
+    // 4. Generar tokens (AccessToken: 60s, RefreshToken: 7d)
+    const [accessToken, refreshToken] = await Promise.all([
+      this.jwtService.signAsync(payload, { expiresIn: '60s' }),
+      this.jwtService.signAsync(payload, { expiresIn: '7d' }),
+    ]);
+
+    // 5. Guardar Refresh Token en la base de datos
+    await this.usersService.updateRefreshToken(user.id, refreshToken);
+
+    return {
+      message: 'Login exitoso',
+      accessToken,
+      refreshToken,
+      user: {
+        id: user.id,
+        username: user.username
+      }
+    };
   }
 
-  // 3. Comparar contraseñas
-  // Solo llegamos aquí si 'user' tiene datos.
-  const isMatch = await this.utilService.comparePasswords(password, user.password);
+  // --- Para el Refresh ---
+async refresh(refreshToken: string) {
+  try {
+    // 1. Verificar que el token sea válido
+    const payload = await this.jwtService.verifyAsync(refreshToken);
+    
+    // 2. Buscar usuario y verificar que el token coincida con el de la BD
+    const user = await this.usersService.findOneByUsername(payload.username);
+    if (!user || user.refreshToken !== refreshToken) {
+      throw new UnauthorizedException('Token inválido o expirado');
+    }
 
-  if (!isMatch) {
-    throw new UnauthorizedException('Contraseña incorrecta.');
+    // 3. Generar nuevo Access Token (60s)
+    const newAccessToken = this.jwtService.sign({ sub: user.id, username: user.username }, { expiresIn: '60s' });
+
+    return { accessToken: newAccessToken };
+  } catch (e) {
+    throw new UnauthorizedException('Sesión expirada');
   }
+}
 
-  return {
-    message: 'Login exitoso',
-    user: { id: user.id, username: user.username }
-  };
+// --- Para el Logout ---
+async logout(userId: number) {
+  // Borramos el token de la base de datos para invalidar sesiones
+  await this.usersService.updateRefreshToken(userId, null);
+  return { message: 'Sesión cerrada correctamente' };
 }
 }
